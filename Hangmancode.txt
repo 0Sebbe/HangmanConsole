@@ -1,0 +1,290 @@
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Collections.Generic;
+
+namespace hangman2
+{
+    class Program
+    {
+        static async Task Main(string[] args)
+        {
+
+            Console.Title = "Hangman2";
+            Console.ForegroundColor = ConsoleColor.Green;
+
+            //string word = GetWord();
+            string word = await GetWord2();
+            char[] wordSplit = word.ToCharArray();
+            char[] uScoreAr = word.ToCharArray();
+
+            //hangman console arrays
+            string[][] hangman = new string[][]
+            {
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "             |\n", "             |\n", "             |\n", "             |\n", "           __|__\n"},
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "             |\n", "             |\n", "             |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "        |    |\n", "             |\n", "             |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "       /|    |\n", "             |\n", "             |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "      \\/|    |\n", "             |\n", "             |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "      \\/|    |\n", "       /     |\n", "             |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "      \\/|    |\n", "       /     |\n", "       \\     |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "      \\/|\\   |\n", "       /     |\n", "       \\     |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "      \\/|\\/  |\n", "       /     |\n", "       \\     |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "      \\/|\\/  |\n", "       / \\   |\n", "       \\     |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "      \\/|\\/  |\n", "       / \\   |\n", "       \\ /   |\n", "           __|__\n" },
+            };
+            string[][] hangman2 = new string[][]
+            {
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "             |\n", "             |\n", "             |\n", "             |\n", "           __|__\n"},
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "             |\n", "             |\n", "             |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "        |    |\n", "             |\n", "             |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "       /|    |\n", "             |\n", "             |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "       /|    |\n", "       /     |\n", "             |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "       /|\\   |\n", "       /     |\n", "             |\n", "           __|__\n" },
+                new string[] {"          ___\n", "         /   |\n", "        |    |\n", "        O    |\n", "       /|\\   |\n", "       / \\   |\n", "             |\n", "           __|__\n" },
+            };
+            int wordMax = word.Length;
+            int indexMax = wordMax - 1;
+            int indexStart = 0;
+            char uScore = '_';
+            int triesStart = 10;
+            int triesStart2 = 6;
+            bool hasWon = false;
+            bool tries = true;
+            int opi = 0;
+            List<char> wrong = new List<char>();
+            wrong.Add(' ');
+            int wrongNumb = 0;
+
+            while (true)
+            {
+                //start screen
+                Console.WriteLine("Press anywhere to start");
+                Hangman(hangman2[0]);
+                Console.WriteLine("\nPress \"e\" for easy or \"h\" for hard difficulty");
+                ConsoleKeyInfo key = Console.ReadKey();
+                Console.Clear();
+                Thread.Sleep(200);
+                if (key.KeyChar == 'e' || key.KeyChar == 'h')
+                {
+                    Console.WriteLine("Guess the word using one character at a time,\nThe word is " + wordMax + " characters long.");
+                    //makes the word underscores
+                    for (int i = indexStart; i < wordMax; i++)
+                    {
+                        //make every character in the word underscores
+                        uScoreAr[i] = uScore;
+                        if (i == indexMax)
+                        {
+                            PrintHiddenWord(uScoreAr);
+                            Console.WriteLine();
+                        }
+                    }
+                }
+                if(key.KeyChar == 'e')
+                {
+                    for (int i = triesStart; i > indexStart; i--)
+                {
+                    Console.WriteLine("\nTries left: " + i);
+                    Hangman(hangman[opi]);
+                    string input = Console.ReadLine();//maybe makes this into ReadKey
+                    input.Remove(1, input.Length - 1);
+                    if (input == word)
+                    {
+                        hasWon = true;
+                        break;
+                    }
+                    char[] charInput = input.ToCharArray();
+                    //checks if input is equal to any characters in the word, otherwise use a try
+                    for (int a = indexStart; a < wordMax; a++)
+                    {
+
+                        if (charInput[0] == wordSplit[a])
+                        {
+                            tries = false;
+                            uScoreAr[a] = wordSplit[a];
+                        }
+                        //checks if you have won or not
+                        if (CompareArrays(uScoreAr, wordSplit))
+                        {
+                            hasWon = true;
+                            break;
+                        }
+
+                    }
+                    if (wrong.Contains(charInput[0]))
+                    {
+                        //nothing
+                    }
+                    else if (tries == true)
+                    {
+                        wrong.Add(charInput[0]);
+                        wrongNumb++;
+                    }
+                    //if tries equals false then dont use a try
+                    if (tries == false)
+                    {
+                        i++;
+                        tries = true;
+                    }
+                    else
+                    {
+                        opi++;
+                    }
+                    //if you found the word, celebrate
+                    if (hasWon == true)
+                    {
+                        Console.WriteLine("--------------------------------");
+                        Console.WriteLine("Word: " + word);
+                        Console.WriteLine("Yay, you figured out the word!\n :D");
+                        break;
+                    }
+
+                    Console.WriteLine("\n");
+                    PrintHiddenWord(uScoreAr);
+                    Console.WriteLine();
+                    Console.Write("Incorrect characters:\n");
+                    wrong.ForEach(Console.Write);
+                    Console.WriteLine();
+                }
+
+                //if you didnt fint the word, lose.
+                if (hasWon != true)
+                {
+                    Hangman(hangman[opi]);
+                    Console.WriteLine();
+                    Console.WriteLine("You lost! The word was " + word);
+                }
+                break;
+                }
+                else if(key.KeyChar == 'h')
+                {
+                    for (int i = triesStart2; i > indexStart; i--)
+                    {
+                        Console.WriteLine("\nTries left: " + i);
+                        Hangman(hangman2[opi]);
+                        string input = Console.ReadLine();//maybe makes this ReadKey but i would have to change some stuff then
+                        input.Remove(1, input.Length - 1);
+                        if (input == word)
+                        {
+                            hasWon = true;
+                            break;
+                        }
+                        char[] charInput = input.ToCharArray();
+                        //checks if input is equal to any characters in the word, otherwise use a try
+                        for (int a = indexStart; a < wordMax; a++)
+                        {
+
+                            if (charInput[0] == wordSplit[a])
+                            {
+                                tries = false;
+                                uScoreAr[a] = wordSplit[a];
+                            }
+                            //checks if you have won or not
+                            if (CompareArrays(uScoreAr, wordSplit))
+                            {
+                                hasWon = true;
+                                break;
+                            }
+
+                        }
+                        if (wrong.Contains(charInput[0]))
+                        {
+                            //nothing
+                        }
+                        else if (tries == true)
+                        {
+                            wrong.Add(charInput[0]);
+                            wrongNumb++;
+                        }
+                        //if tries equals false then dont use a try
+                        if (tries == false)
+                        {
+                            i++;
+                            tries = true;
+                        }
+                        else
+                        {
+                            opi++;
+                        }
+                        //if you found the word, celebrate
+                        if (hasWon == true)
+                        {
+                            Console.WriteLine("--------------------------------");
+                            Console.WriteLine("Word: " + word);
+                            Console.WriteLine("Yay, you figured out the word!\n :D");
+                            break;
+                        }
+
+                        Console.WriteLine("\n");
+                        PrintHiddenWord(uScoreAr);
+                        Console.WriteLine();
+                        Console.Write("Incorrect characters:\n");
+                        wrong.ForEach(Console.Write);
+                        Console.WriteLine();
+                    }
+
+                    //if you didnt fint the word, lose
+                    if (hasWon != true)
+                    {
+                        Hangman(hangman2[opi]);
+                        Console.WriteLine();
+                        Console.WriteLine("You lost! The word was " + word);
+                    }
+                    break;
+                }
+            }
+        }
+        //my own words that i can add and remove
+        private static string GetWord()
+        {
+            int dice;
+            string[] words = { "pineapple", "computer", "ground", "popularity", "monster", "necklace", "bottle", "ocean", "skyscraper", "motivation", "poison", "supply", "kitchen", "unicorn" };
+            Random rnd = new Random();
+            dice = rnd.Next(0, words.Length);
+            string word = words[dice];
+            return word;
+        }
+        //words from a website, completely random and i dont even know what the word could be
+        private static async Task<string> GetWord2()
+        {
+            using var client = new HttpClient();
+
+            var result = await client.GetAsync("http://random-word-api.herokuapp.com/word");
+            var word = await result.Content.ReadAsStringAsync();
+            //removes sqaure brackets and these= "" from the imported word
+            string goodWord = word.Trim(new Char[] { '[', '"', ']' });
+
+            return goodWord;
+        }
+        //compares arrays to make sure they are the same and if you win or not
+        static bool CompareArrays(char[] a, char[] b)
+        {
+            string sa = new string(a);
+            string sb = new string(b);
+
+            return sa.Equals(sb);
+        }
+        //makes spaces between every underscore in the hidden word and then prints it
+        public static void PrintHiddenWord(char[] a)
+        {
+            foreach(var item in a)
+            {
+                Console.Write(item + " ");
+            }
+            
+        }
+        //prints the correct amount of spaces and lines in the console when hangman is needed
+        public static void Hangman(string[] a)
+        {
+            Console.Write(a[0]);
+            Console.Write(a[1]);
+            Console.Write(a[2]);
+            Console.Write(a[3]);
+            Console.Write(a[4]);
+            Console.Write(a[5]);
+            Console.Write(a[6]);
+            Console.Write(a[7]);
+        }
+    }
+}
